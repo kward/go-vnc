@@ -5,8 +5,8 @@ This library implements [RFC 6143][RFC6143] -- The Remote Framebuffer Protocol
 -- the protocol used by VNC.
 
 ## Project links
-* Build Status:  [![Build Status][CIStatus]][CIProject]
-* Documentation: [![GoDoc][GoDocStatus]][GoDoc]
+* CI:             [![CI][CIStatus]][CIProject]
+* Documentation:  [![GoDoc][GoDocStatus]][GoDoc]
 
 ## Setup (Go modules)
 1. Add to your module and run tests.
@@ -40,8 +40,8 @@ There are two additional files that provide everything else:
 <!--- Links -->
 [RFC6143]: http://tools.ietf.org/html/rfc6143
 
-[CIProject]: https://travis-ci.org/kward/go-vnc
-[CIStatus]: https://travis-ci.org/kward/go-vnc.png?branch=master
+[CIProject]: https://github.com/kward/go-vnc/actions/workflows/go.yml
+[CIStatus]: https://github.com/kward/go-vnc/actions/workflows/go.yml/badge.svg?branch=master
 
 [GoDoc]: https://pkg.go.dev/github.com/kward/go-vnc
 [GoDocStatus]: https://pkg.go.dev/badge/github.com/kward/go-vnc.svg
