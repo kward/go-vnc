@@ -7,7 +7,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/golang/glog"
 	"github.com/kward/go-vnc/buttons"
 	"github.com/kward/go-vnc/encodings"
 	"github.com/kward/go-vnc/keys"
@@ -29,7 +28,7 @@ type SetPixelFormatMessage struct {
 // See RFC 6143 Section 7.5.1
 func (c *ClientConn) SetPixelFormat(pf PixelFormat) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof("ClientConn.%s", logging.FnNameWithArgs("%s", pf))
+		logging.Infof("ClientConn.%s", logging.FnNameWithArgs("%s", pf))
 	}
 
 	msg := SetPixelFormatMessage{
@@ -66,7 +65,7 @@ type SetEncodingsMessage struct {
 // See RFC 6143 Section 7.5.2
 func (c *ClientConn) SetEncodings(encs Encodings) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof("ClientConn.%s", logging.FnNameWithArgs("%s", encs))
+		logging.Infof("ClientConn.%s", logging.FnNameWithArgs("%s", encs))
 	}
 
 	// Make sure RawEncoding is supported.
@@ -146,7 +145,7 @@ const (
 // See RFC 6143 Section 7.5.4.
 func (c *ClientConn) KeyEvent(key keys.Key, down bool) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof("ClientConnt.%s", logging.FnNameWithArgs("%s, %t", key, down))
+		logging.Infof("ClientConnt.%s", logging.FnNameWithArgs("%s, %t", key, down))
 	}
 
 	msg := KeyEventMessage{messages.KeyEvent, rfbflags.BoolToRFBFlag(down), [2]byte{}, key}
@@ -174,7 +173,7 @@ type PointerEventMessage struct {
 // See RFC 6143 Section 7.5.5
 func (c *ClientConn) PointerEvent(button buttons.Button, x, y uint16) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnNameWithArgs("%s, %d, %d", button, x, y))
+		logging.Infof("%s", logging.FnNameWithArgs("%s, %d, %d", button, x, y))
 	}
 
 	msg := PointerEventMessage{messages.PointerEvent, uint8(button), x, y}
@@ -201,7 +200,7 @@ type ClientCutTextMessage struct {
 // See RFC 6143 Section 7.5.6
 func (c *ClientConn) ClientCutText(text string) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnNameWithArgs("%s", text))
+		logging.Infof("%s", logging.FnNameWithArgs("%s", text))
 	}
 
 	for _, char := range text {

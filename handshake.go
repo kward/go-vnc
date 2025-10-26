@@ -5,7 +5,6 @@ package vnc
 import (
 	"fmt"
 
-	"github.com/golang/glog"
 	"github.com/kward/go-vnc/logging"
 
 	"context"
@@ -41,7 +40,7 @@ const (
 // protocolVersionHandshake implements §7.1.1 ProtocolVersion Handshake.
 func (c *ClientConn) protocolVersionHandshake(ctx context.Context) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	var protocolVersion [pvLen]byte
@@ -51,7 +50,7 @@ func (c *ClientConn) protocolVersionHandshake(ctx context.Context) error {
 		return err
 	}
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("protocolVersion: %s", protocolVersion)
+		logging.Infof("protocolVersion: %s", protocolVersion)
 	}
 
 	major, minor, err := parseProtocolVersion(protocolVersion[:])
@@ -80,7 +79,7 @@ func (c *ClientConn) protocolVersionHandshake(ctx context.Context) error {
 	}
 
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("supported protocolVersion: %s", pv)
+		logging.Infof("supported protocolVersion: %s", pv)
 	}
 	c.protocolVersion = pv
 
@@ -95,7 +94,7 @@ func (c *ClientConn) protocolVersionHandshake(ctx context.Context) error {
 // securityHandshake implements §7.1.2 Security Handshake.
 func (c *ClientConn) securityHandshake() error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	switch c.protocolVersion {
@@ -116,7 +115,7 @@ func (c *ClientConn) securityHandshake() error {
 
 func (c *ClientConn) securityHandshake33() error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	var secType uint32
@@ -149,7 +148,7 @@ func (c *ClientConn) securityHandshake33() error {
 
 func (c *ClientConn) securityHandshake38() error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	// Determine server supported security types.
@@ -169,7 +168,7 @@ func (c *ClientConn) securityHandshake38() error {
 		return err
 	}
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("securityTypes: %v", securityTypes)
+		logging.Infof("securityTypes: %v", securityTypes)
 	}
 
 	// Choose client security type.
@@ -201,7 +200,7 @@ FindAuth:
 // securityResultHandshake implements §7.1.3 SecurityResult Handshake.
 func (c *ClientConn) securityResultHandshake() error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	if c.config.secType == secTypeNone {
@@ -230,7 +229,7 @@ func (c *ClientConn) securityResultHandshake() error {
 // TODO(kward): need a context for timeout
 func (c *ClientConn) readErrorReason() (string, error) {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 
 	var reasonLen uint32

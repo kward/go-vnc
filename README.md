@@ -45,3 +45,43 @@ There are two additional files that provide everything else:
 
 [GoDoc]: https://pkg.go.dev/github.com/kward/go-vnc
 [GoDocStatus]: https://pkg.go.dev/badge/github.com/kward/go-vnc.svg
+
+## Logging
+
+This library uses a small facade over Go's slog for internal logging. You can:
+
+- Gate verbose logs via verbosity levels:
+
+    ```go
+    import "github.com/kward/go-vnc/logging"
+
+    // Enable result-level logs (and below). 0 disables V checks entirely.
+    logging.SetVerbosity(logging.ResultLevel)
+    ```
+
+- Provide your own slog logger/handler (JSON or text) and level:
+
+    ```go
+    package main
+
+    import (
+            "log/slog"
+            "os"
+
+            "github.com/kward/go-vnc/logging"
+    )
+
+    func init() {
+            logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
+            logging.SetLogger(logger)
+            logging.SetVerbosity(logging.ResultLevel) // optional: enable verbose gated logs
+    }
+    ```
+
+- Optionally emit structured logs from your code using the facade helpers:
+
+    ```go
+    logging.Info("connecting", "addr", addr)
+    logging.Debug("frame", "w", w, "h", h)
+    ```
+

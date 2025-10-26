@@ -18,7 +18,7 @@ Purpose: This repo is a VNC client library that implements RFC 6143. Files are o
 ## Conventions and patterns specific to this repo
 - Files mirror RFC sections; wire structs embed padding fields to match on-the-wire layout and use big-endian via `Buffer` helpers.
 - Default encodings include only Raw. If your client must handle desktop resizes, include `DesktopSizePseudoEncoding` in `ClientConn.encodings` before calling `SetEncodings`.
-- Logging uses `logging.V(level) && glog.Info...` patterns. Treat logs as optional; do not introduce mandatory flag parsing in library code.
+- Logging uses `logging.V(level) && logging.Infof(...)` patterns backed by Go's slog. Treat logs as optional; do not introduce mandatory flag parsing in library code. Configure with `logging.SetVerbosity(level)` and optionally provide a custom slog logger via `logging.SetLogger(...)`.
 - A small UI settle delay is applied after client input (`KeyEvent`, `PointerEvent`, `ClientCutText`). Tests disable it via `SetSettle(0)`.
 - Context tuning: the `Connect` path honors ctx value `"vnc_max_proto_version"` with values "3.3" or "3.8".
 

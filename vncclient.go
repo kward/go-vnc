@@ -11,8 +11,6 @@ import (
 	"reflect"
 
 	"context"
-
-	"github.com/golang/glog"
 	"github.com/kward/go-vnc/go/metrics"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"
@@ -170,7 +168,7 @@ func (c *ClientConn) DesktopName() string {
 // setDesktopName stores the server provided desktop name.
 func (c *ClientConn) setDesktopName(name string) {
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("desktopName: %s", name)
+		logging.Infof("desktopName: %s", name)
 	}
 	c.desktopName = name
 }
@@ -188,7 +186,7 @@ func (c *ClientConn) FramebufferHeight() uint16 {
 // setFramebufferHeight stores the server provided framebuffer height.
 func (c *ClientConn) setFramebufferHeight(height uint16) {
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("height: %d", height)
+		logging.Infof("height: %d", height)
 	}
 	c.fbHeight = height
 }
@@ -201,7 +199,7 @@ func (c *ClientConn) FramebufferWidth() uint16 {
 // setFramebufferWidth stores the server provided framebuffer width.
 func (c *ClientConn) setFramebufferWidth(width uint16) {
 	if logging.V(logging.ResultLevel) {
-		glog.Infof("width: %d", width)
+		logging.Infof("width: %d", width)
 	}
 	c.fbWidth = width
 }
@@ -209,7 +207,7 @@ func (c *ClientConn) setFramebufferWidth(width uint16) {
 // ListenAndHandle listens to a VNC server and handles server messages.
 func (c *ClientConn) ListenAndHandle() error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Info(logging.FnName())
+		logging.Infof("%s", logging.FnName())
 	}
 	defer c.Close()
 
@@ -228,7 +226,7 @@ func (c *ClientConn) ListenAndHandle() error {
 			break
 		}
 		if logging.V(logging.ResultLevel) {
-			glog.Infof("message-type: %s", messageType)
+			logging.Infof("message-type: %s", messageType)
 		}
 
 		msg, ok := serverMessages[messageType]
@@ -267,7 +265,7 @@ func (c *ClientConn) receive(data interface{}) error {
 // receiveN receives N packets from the network.
 func (c *ClientConn) receiveN(data interface{}, n int) error {
 	if logging.V(logging.FnDeclLevel) {
-		glog.Infof("ClientConn.%s", logging.FnName())
+		logging.Infof("ClientConn.%s", logging.FnName())
 	}
 	if n == 0 {
 		return nil
@@ -308,7 +306,7 @@ func (c *ClientConn) receiveN(data interface{}, n int) error {
 // send a packet to the network.
 func (c *ClientConn) send(data interface{}) error {
 	if logging.V(logging.SpamLevel) {
-		glog.Infof("ClientConn.%s", logging.FnNameWithArgs("%v", data))
+		logging.Infof("ClientConn.%s", logging.FnNameWithArgs("%v", data))
 	}
 	if err := binary.Write(c.c, binary.BigEndian, data); err != nil {
 		return err

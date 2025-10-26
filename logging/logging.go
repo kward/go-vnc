@@ -1,16 +1,18 @@
 /*
-Package logging provides common logging functionality.
+Package logging provides a small facade over Go's slog with repo-specific helpers.
 */
 package logging
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 	"runtime"
 	"strings"
-
-	"github.com/golang/glog"
+	"sync/atomic"
 )
 
+// Verbosity levels used throughout the repo; higher is more verbose.
 const (
 	FlowLevel      = 2
 	FnDeclLevel    = 3
@@ -19,17 +21,49 @@ const (
 	CrazySpamLevel = 6
 )
 
-func V(level glog.Level) glog.Verbose {
-	return glog.V(level)
+var verbosity atomic.Int32 // if verbosity >= level, V(level) is true
+
+// SetVerbosity sets the global verbosity level (e.g., 0 disables V checks, 5 enables spam-level logs).
+func SetVerbosity(v int) { verbosity.Store(int32(v)) }
+
+// V reports whether logs guarded at the given level should be emitted.
+func V(level int) bool { return verbosity.Load() >= int32(level) }
+
+var logger atomic.Value // holds *slog.Logger
+
+func init() {
+	logger.Store(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
 }
 
-// FnName returns the calling function name, e.g. "SomeFunction()". This is
-// useful for logging a function name.
-//
-// Example:
-//   if glog.V(logging.FnDeclLevel) {
-//     glog.Info(logging.FnName())
-//   }
+// SetLogger overrides the global logger used by this package.
+func SetLogger(l *slog.Logger) {
+	if l == nil {
+		l = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	}
+	logger.Store(l)
+}
+
+func get() *slog.Logger { return logger.Load().(*slog.Logger) }
+
+// Structured logging helpers (prefer when you have keyvals).
+func Info(msg string, attrs ...any)  { get().Info(msg, attrs...) }
+func Debug(msg string, attrs ...any) { get().Debug(msg, attrs...) }
+func Warn(msg string, attrs ...any)  { get().Warn(msg, attrs...) }
+func Error(msg string, attrs ...any) { get().Error(msg, attrs...) }
+
+// Infof logs an informational message.
+func Infof(format string, args ...interface{}) { get().Info(fmt.Sprintf(format, args...)) }
+
+// Debugf logs a debug message.
+func Debugf(format string, args ...interface{}) { get().Debug(fmt.Sprintf(format, args...)) }
+
+// Warnf logs a warning message.
+func Warnf(format string, args ...interface{}) { get().Warn(fmt.Sprintf(format, args...)) }
+
+// Errorf logs an error message.
+func Errorf(format string, args ...interface{}) { get().Error(fmt.Sprintf(format, args...)) }
+
+// FnName returns the calling function name, e.g. "SomeFunction()".
 func FnName() string {
 	pc := make([]uintptr, 10) // At least 1 entry needed.
 	runtime.Callers(2, pc)
@@ -37,14 +71,7 @@ func FnName() string {
 	return name[strings.LastIndex(name, ".")+1:] + "()"
 }
 
-// FnNameWithArgs returns the calling function name, with argument values,
-// e.g. "SomeFunction(arg1, arg2)". This is useful for logging function calls
-// with arguments.
-//
-// Example:
-//   if glog.V(logging.FnDeclLevel) {
-//     glog.Info(logging.FnNameWithArgs(arg1, arg2, arg3))
-//   }
+// FnNameWithArgs returns the calling function name with supplied argument values embedded.
 func FnNameWithArgs(format string, args ...interface{}) string {
 	pc := make([]uintptr, 10) // At least 1 entry needed.
 	runtime.Callers(2, pc)
