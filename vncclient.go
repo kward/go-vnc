@@ -10,11 +10,12 @@ import (
 	"net"
 	"reflect"
 
+	"context"
+
 	"github.com/golang/glog"
 	"github.com/kward/go-vnc/go/metrics"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"
-	"golang.org/x/net/context"
 )
 
 // Connect negotiates a connection to a VNC server.
@@ -272,33 +273,30 @@ func (c *ClientConn) receiveN(data interface{}, n int) error {
 		return nil
 	}
 
-	switch data.(type) {
+	switch v := data.(type) {
 	case *[]uint8:
-		var v uint8
+		var b uint8
 		for i := 0; i < n; i++ {
-			if err := binary.Read(c.c, binary.BigEndian, &v); err != nil {
+			if err := binary.Read(c.c, binary.BigEndian, &b); err != nil {
 				return err
 			}
-			slice := data.(*[]uint8)
-			*slice = append(*slice, v)
+			*v = append(*v, b)
 		}
 	case *[]int32:
-		var v int32
+		var x int32
 		for i := 0; i < n; i++ {
-			if err := binary.Read(c.c, binary.BigEndian, &v); err != nil {
+			if err := binary.Read(c.c, binary.BigEndian, &x); err != nil {
 				return err
 			}
-			slice := data.(*[]int32)
-			*slice = append(*slice, v)
+			*v = append(*v, x)
 		}
 	case *bytes.Buffer:
-		var v byte
+		var b byte
 		for i := 0; i < n; i++ {
-			if err := binary.Read(c.c, binary.BigEndian, &v); err != nil {
+			if err := binary.Read(c.c, binary.BigEndian, &b); err != nil {
 				return err
 			}
-			buf := data.(*bytes.Buffer)
-			buf.WriteByte(v)
+			v.WriteByte(b)
 		}
 	default:
 		return NewVNCError(fmt.Sprintf("unrecognized data type %v", reflect.TypeOf(data)))
@@ -357,7 +355,7 @@ func (c *ClientConn) processContext(ctx context.Context) error {
 			}
 		}
 		if !valid {
-			return fmt.Errorf("Invalid max protocol version %v; supported versions are %v", mpv, vers)
+			return fmt.Errorf("invalid max protocol version %v; supported versions are %v", mpv, vers)
 		}
 	}
 

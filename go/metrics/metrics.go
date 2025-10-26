@@ -43,7 +43,7 @@ func init() {
 
 func add(metric Metric) error {
 	if _, ok := metrics[metric.Name()]; ok {
-		return fmt.Errorf("Metric %v already exists.", metric.Name())
+		return fmt.Errorf("Metric %v already exists", metric.Name())
 	}
 	metrics[metric.Name()] = metric
 	return nil

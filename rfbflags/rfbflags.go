@@ -15,7 +15,7 @@ const (
 )
 
 func BoolToRFBFlag(b bool) RFBFlag {
-	if b == true {
+	if b {
 		return RFBTrue
 	}
 	return RFBFalse

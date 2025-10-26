@@ -8,18 +8,18 @@ This library implements [RFC 6143][RFC6143] -- The Remote Framebuffer Protocol
 * Build Status:  [![Build Status][CIStatus]][CIProject]
 * Documentation: [![GoDoc][GoDocStatus]][GoDoc]
 
-## Setup
-1. Download software and supporting packages.
+## Setup (Go modules)
+1. Add to your module and run tests.
 
     ```
-    $ go get github.com/kward/go-vnc
-    $ go get golang.org/x/net
+    $ go get github.com/kward/go-vnc@latest
+    $ go test ./...
     ```
 
 ## Usage
 Sample code usage is available in the GoDoc.
 
-- Connect and listen to server messages: <https://godoc.org/github.com/kward/go-vnc#example-Connect>
+- Connect and listen to server messages: <https://pkg.go.dev/github.com/kward/go-vnc#example-Connect>
 
 The source code is laid out such that the files match the document sections:
 
@@ -43,5 +43,5 @@ There are two additional files that provide everything else:
 [CIProject]: https://travis-ci.org/kward/go-vnc
 [CIStatus]: https://travis-ci.org/kward/go-vnc.png?branch=master
 
-[GoDoc]: https://godoc.org/github.com/kward/go-vnc
-[GoDocStatus]: https://godoc.org/github.com/kward/go-vnc?status.svg
+[GoDoc]: https://pkg.go.dev/github.com/kward/go-vnc
+[GoDocStatus]: https://pkg.go.dev/badge/github.com/kward/go-vnc.svg

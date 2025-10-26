@@ -1,3 +1,4 @@
+//lint:file-ignore S1021 stylistic suggestions not necessary for tests
 package vnc
 
 import (

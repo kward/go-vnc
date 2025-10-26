@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
 	"reflect"
 	"testing"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 func newMockServer(t *testing.T, version string) string {
@@ -21,13 +22,16 @@ func newMockServer(t *testing.T, version string) string {
 		defer ln.Close()
 		c, err := ln.Accept()
 		if err != nil {
-			t.Fatalf("error accepting conn: %s", err)
+			// Avoid calling testing.T from a goroutine; log and return.
+			log.Printf("test server: error accepting conn: %v", err)
+			return
 		}
 		defer c.Close()
 
-		_, err = c.Write([]byte(fmt.Sprintf("RFB %s\n", version)))
-		if err != nil {
-			t.Fatal("failed writing version")
+		if _, err = c.Write([]byte(fmt.Sprintf("RFB %s\n", version))); err != nil {
+			// Avoid calling testing.T from a goroutine; log and return.
+			log.Printf("test server: failed writing version: %v", err)
+			return
 		}
 	}()
 

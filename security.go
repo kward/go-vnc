@@ -58,7 +58,7 @@ func (auth *ClientAuthVNC) Handshake(conn *ClientConn) error {
 	}
 
 	if auth.Password == "" {
-		return NewVNCError("Security Handshake failed; no password provided for VNCAuth.")
+		return NewVNCError("Security Handshake failed; no password provided for VNCAuth")
 	}
 
 	// Read challenge block

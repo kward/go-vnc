@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"math"
 
 	"github.com/kward/go-vnc/rfbflags"
 )
@@ -37,7 +36,13 @@ var _ MarshalerUnmarshaler = (*PixelFormat)(nil)
 // NewPixelFormat returns a populated PixelFormat structure.
 func NewPixelFormat(bpp uint8) PixelFormat {
 	bigEndian := rfbflags.RFBTrue
-	rgbMax := uint16(math.Exp2(float64(bpp))) - 1
+	// Avoid float rounding/overflow; cap at 0xFFFF since fields are uint16.
+	var rgbMax uint16
+	if bpp >= 16 {
+		rgbMax = 0xFFFF
+	} else {
+		rgbMax = uint16((1 << bpp) - 1)
+	}
 	var (
 		tc         = rfbflags.RFBTrue
 		rs, gs, bs uint8
@@ -60,7 +65,7 @@ func (pf PixelFormat) Marshal() ([]byte, error) {
 	switch pf.BPP {
 	case 8, 16, 32:
 	default:
-		return nil, NewVNCError(fmt.Sprintf("Invalid BPP value %v; must be 8, 16, or 32.", pf.BPP))
+		return nil, NewVNCError(fmt.Sprintf("Invalid BPP value %v; must be 8, 16, or 32", pf.BPP))
 	}
 
 	if pf.Depth < pf.BPP {
@@ -69,7 +74,7 @@ func (pf PixelFormat) Marshal() ([]byte, error) {
 	switch pf.Depth {
 	case 8, 16, 32:
 	default:
-		return nil, NewVNCError(fmt.Sprintf("Invalid Depth value %v; must be 8, 16, or 32.", pf.Depth))
+		return nil, NewVNCError(fmt.Sprintf("Invalid Depth value %v; must be 8, 16, or 32", pf.Depth))
 	}
 
 	// Create the slice of bytes

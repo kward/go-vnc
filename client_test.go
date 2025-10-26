@@ -14,7 +14,7 @@ import (
 	"github.com/kward/go-vnc/keys"
 	"github.com/kward/go-vnc/messages"
 	"github.com/kward/go-vnc/rfbflags"
-	"golang.org/x/net/context"
+	"context"
 )
 
 func TestSetPixelFormat(t *testing.T) {

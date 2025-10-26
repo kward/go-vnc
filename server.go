@@ -401,6 +401,7 @@ func (c *Color) Unmarshal(data []byte) error {
 	return nil
 }
 
+//lint:ignore U1000 helper for potential future image conversions; currently unused
 func colorsToImage(x, y, width, height uint16, colors []Color) *image.RGBA64 {
 	rect := image.Rect(int(x), int(y), int(x+width), int(y+height))
 	rgba := image.NewRGBA64(rect)

@@ -8,7 +8,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/kward/go-vnc/logging"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 const pvLen = 12 // ProtocolVersion message length.
@@ -22,7 +22,7 @@ func parseProtocolVersion(pv []byte) (uint, uint, error) {
 
 	l, err := fmt.Sscanf(string(pv), "RFB %d.%d\n", &major, &minor)
 	if l != 2 {
-		return 0, 0, fmt.Errorf("error parsing ProtocolVersion.")
+		return 0, 0, fmt.Errorf("error parsing ProtocolVersion")
 	}
 	if err != nil {
 		return 0, 0, err
@@ -108,7 +108,7 @@ func (c *ClientConn) securityHandshake() error {
 			return err
 		}
 	default:
-		return NewVNCError(fmt.Sprintf("Security handshake failed; unsupported protocol"))
+		return NewVNCError("Security handshake failed; unsupported protocol")
 	}
 
 	return nil

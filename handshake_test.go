@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 func TestParseProtocolVersion(t *testing.T) {
@@ -302,7 +302,9 @@ func TestSecurityHandshake38(t *testing.T) {
 
 		// Validate client response.
 		var secType uint8
-		err = conn.receive(&secType)
+		if err := conn.receive(&secType); err != nil {
+			t.Fatalf("%d: error receiving security-type: %v", i, err)
+		}
 		if got, want := secType, tt.secType; got != want {
 			t.Errorf("%d: incorrect security-type; got = %v, want = %v", i, got, want)
 		}
