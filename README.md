@@ -180,6 +180,11 @@ This library uses a small facade over Go's slog for internal logging. You can:
     logging.Debug("frame", "w", w, "h", h)
     ```
 
+See also:
+
+- Package docs for logging, verbosity levels, and helpers: <https://pkg.go.dev/github.com/kward/go-vnc/logging>
+- APIs referenced above: `logging.SetVerbosity`, `logging.SetLogger`, and structured helpers `logging.Info/Debug/Warn/Error`
+
 ## Code generation (stringer)
 
 This repo uses the Go stringer tool to generate String() methods for enums (e.g., Button, Key, Encoding, RFBFlag, ClientMessage, ServerMessage). To update generated files, install stringer and run go generate:
