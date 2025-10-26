@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"context"
+
 	"github.com/kward/go-vnc/go/metrics"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"

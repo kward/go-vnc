@@ -85,3 +85,29 @@ This library uses a small facade over Go's slog for internal logging. You can:
     logging.Debug("frame", "w", w, "h", h)
     ```
 
+## Code generation (stringer)
+
+This repo uses the Go stringer tool to generate String() methods for enums (e.g., Button, Key, Encoding, RFBFlag, ClientMessage, ServerMessage). To update generated files, install stringer and run go generate:
+
+- Install stringer (Go 1.17+):
+
+    ```bash
+    go install golang.org/x/tools/cmd/stringer@latest
+    ```
+
+    Ensure your GOBIN is on PATH. By default, binaries are installed to $(go env GOPATH)/bin (or $(go env GOBIN) if set). For example, you can add this to your shell profile:
+
+    ```bash
+    export PATH="$(go env GOPATH)/bin:$PATH"
+    ```
+
+- Regenerate code from the repo root:
+
+    ```bash
+    go generate ./...
+    ```
+
+Notes:
+- The go:generate directives are embedded in source files (e.g., `//go:generate stringer -type=Button`).
+- Generated files have names like `*_string.go` and should be committed to the repo.
+

@@ -4,6 +4,7 @@ package vnc
 
 import (
 	"crypto/des"
+
 	"github.com/kward/go-vnc/logging"
 )
 
