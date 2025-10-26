@@ -20,6 +20,8 @@ This library implements [RFC 6143][RFC6143] -- The Remote Framebuffer Protocol
 Sample code usage is available in the GoDoc.
 
 - Connect and listen to server messages: <https://pkg.go.dev/github.com/kward/go-vnc#example-Connect>
+- Client input examples (keys, pointer, clipboard, updates): see [Client input examples](#client-input-examples)
+- Package examples on pkg.go.dev: [keys examples](https://pkg.go.dev/github.com/kward/go-vnc/keys#pkg-examples), [buttons examples](https://pkg.go.dev/github.com/kward/go-vnc/buttons#pkg-examples)
 
 ### Client input examples
 
