@@ -1,14 +1,24 @@
-// Package keys provides constants for all the keyboard inputs.
+// Package keys provides constants for keyboard inputs (X11 KeySyms as used by
+// the RFB protocol per RFC 6143 §7.5.4). The constants in this package mirror
+// ASCII/Latin-1 where possible:
+//
+//   - Printable ASCII U+0020..U+007E are sequential and map directly; for a
+//     printable rune r in that range, Key(r) equals the corresponding constant
+//     (e.g., Key('A') == A, Key('a') == SmallA, Key('0') == Digit0, Key('-') == Minus).
+//   - Extended Latin-1 U+0080..U+00FF are also represented in the low 8 bits for
+//     convenience.
+//   - Special and control keys live in the 0xFFxx range (e.g., BackSpace 0xFF08,
+//     Tab 0xFF09, Return 0xFF0D, Escape 0xFF1B), matching X11 KeySym values.
 package keys
 
 import "fmt"
 
-// Key represents a VNC key press.
+// Key represents a VNC key press (an X11 KeySym value on the wire).
 type Key uint32
 
 //go:generate stringer -type=Key
 
-// Keys is a slice of Key values.
+// Keys is a convenience slice of Key values.
 type Keys []Key
 
 var keymap = map[rune]Key{
@@ -25,7 +35,8 @@ var keymap = map[rune]Key{
 	'9': Digit9,
 }
 
-// IntToKeys returns Keys that represent the key presses required to type an int.
+// IntToKeys returns Keys that represent the key presses required to type an int
+// using ASCII digits and an optional leading minus sign.
 func IntToKeys(v int) Keys {
 	k := Keys{}
 	for _, c := range fmt.Sprintf("%d", v) {
