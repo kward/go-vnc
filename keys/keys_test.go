@@ -56,3 +56,75 @@ func TestControlKeyValues(t *testing.T) {
 		}
 	}
 }
+
+func TestFromRune(t *testing.T) {
+	tests := []struct {
+		name string
+		r    rune
+		want Key
+		ok   bool
+	}{
+		// Printable ASCII
+		{"space", ' ', Space, true},
+		{"digit0", '0', Digit0, true},
+		{"digit9", '9', Digit9, true},
+		{"minus", '-', Minus, true},
+		{"A", 'A', A, true},
+		{"Z", 'Z', Z, true},
+		{"a", 'a', SmallA, true},
+		{"z", 'z', SmallZ, true},
+		{"tilde", '~', AsciiTilde, true},
+		// Control characters
+		{"newline", '\n', Linefeed, true},
+		{"tab", '\t', Tab, true},
+		{"backspace", '\b', BackSpace, true},
+		{"return", '\r', Return, true},
+		// Extended Latin-1
+		{"non-breaking space", '\u00A0', Key(0xA0), true},
+		{"yen", '¥', Key(0xA5), true},
+		// Unsupported
+		{"emoji", '😀', 0, false},
+		{"high unicode", '\u2013', 0, false},
+		{"control below 0x20", '\x01', 0, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := FromRune(tt.r)
+			if ok != tt.ok {
+				t.Errorf("FromRune(%q) ok = %v, want %v", tt.r, ok, tt.ok)
+			}
+			if ok && got != tt.want {
+				t.Errorf("FromRune(%q) = %v, want %v", tt.r, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTextToKeys(t *testing.T) {
+	tests := []struct {
+		name    string
+		text    string
+		want    Keys
+		wantErr bool
+	}{
+		{"empty", "", Keys{}, false},
+		{"digits", "123", Keys{Digit1, Digit2, Digit3}, false},
+		{"mixed", "A0-z", Keys{A, Digit0, Minus, SmallZ}, false},
+		{"with newline", "hi\n", Keys{SmallH, SmallI, Linefeed}, false},
+		{"with tab", "a\tb", Keys{SmallA, Tab, SmallB}, false},
+		{"emoji fail", "test😀", nil, true},
+		{"high unicode fail", "test—more", nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := TextToKeys(tt.text)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TextToKeys(%q) error = %v, wantErr %v", tt.text, err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TextToKeys(%q) = %v, want %v", tt.text, got, tt.want)
+			}
+		})
+	}
+}

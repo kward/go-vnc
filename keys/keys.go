@@ -11,7 +11,10 @@
 //     Tab 0xFF09, Return 0xFF0D, Escape 0xFF1B), matching X11 KeySym values.
 package keys
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // Key represents a VNC key press (an X11 KeySym value on the wire).
 type Key uint32
@@ -21,28 +24,51 @@ type Key uint32
 // Keys is a convenience slice of Key values.
 type Keys []Key
 
-var keymap = map[rune]Key{
-	'-': Minus,
-	'0': Digit0,
-	'1': Digit1,
-	'2': Digit2,
-	'3': Digit3,
-	'4': Digit4,
-	'5': Digit5,
-	'6': Digit6,
-	'7': Digit7,
-	'8': Digit8,
-	'9': Digit9,
+// FromRune converts a rune to a Key. It handles printable ASCII (U+0020..U+007E),
+// extended Latin-1 (U+0080..U+00FF), and common control characters (\n, \t, \b, \r).
+// Returns (Key, true) on success or (0, false) for unsupported runes.
+func FromRune(r rune) (Key, bool) {
+	switch r {
+	case '\n':
+		return Linefeed, true
+	case '\t':
+		return Tab, true
+	case '\b':
+		return BackSpace, true
+	case '\r':
+		return Return, true
+	}
+	// Printable ASCII and extended Latin-1 map directly.
+	if r >= 0x20 && r <= 0xFF {
+		return Key(r), true
+	}
+	return 0, false
+}
+
+// TextToKeys converts a string to Keys by mapping each rune via FromRune.
+// Returns an error if any rune is unsupported.
+func TextToKeys(s string) (Keys, error) {
+	ks := make(Keys, 0, len(s))
+	for _, r := range s {
+		k, ok := FromRune(r)
+		if !ok {
+			return nil, fmt.Errorf("unsupported rune %q (U+%04X)", r, r)
+		}
+		ks = append(ks, k)
+	}
+	return ks, nil
 }
 
 // IntToKeys returns Keys that represent the key presses required to type an int
-// using ASCII digits and an optional leading minus sign.
+// using ASCII digits and an optional leading minus sign. Digits and minus map
+// directly since they're in the printable ASCII range.
 func IntToKeys(v int) Keys {
-	k := Keys{}
-	for _, c := range fmt.Sprintf("%d", v) {
-		k = append(k, keymap[c])
+	s := strconv.Itoa(v)
+	ks := make(Keys, 0, len(s))
+	for _, r := range s {
+		ks = append(ks, Key(r))
 	}
-	return k
+	return ks
 }
 
 // Latin 1 (byte 3 = 0)
