@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/kward/go-vnc/buttons"
+	"github.com/kward/go-vnc/encoding"
 	"github.com/kward/go-vnc/encodings"
 	"github.com/kward/go-vnc/keys"
 	"github.com/kward/go-vnc/logging"
@@ -31,11 +32,27 @@ func (c *ClientConn) SetPixelFormat(pf PixelFormat) error {
 		logging.Infof("ClientConn.%s", logging.FnNameWithArgs("%s", pf))
 	}
 
-	msg := SetPixelFormatMessage{
-		Msg: messages.SetPixelFormat,
-		PF:  pf,
+	pfWire := encoding.PixelFormatWire{
+		BPP:        pf.BPP,
+		Depth:      pf.Depth,
+		BigEndian:  uint8(pf.BigEndian),
+		TrueColor:  uint8(pf.TrueColor),
+		RedMax:     pf.RedMax,
+		GreenMax:   pf.GreenMax,
+		BlueMax:    pf.BlueMax,
+		RedShift:   pf.RedShift,
+		GreenShift: pf.GreenShift,
+		BlueShift:  pf.BlueShift,
 	}
-	if err := c.send(msg); err != nil {
+	wmsg := encoding.SetPixelFormatRequestWire{
+		MsgType: byte(messages.SetPixelFormat),
+		PF:      pfWire,
+	}
+	b, err := encoding.MarshalToWire(&wmsg)
+	if err != nil {
+		return err
+	}
+	if err := c.send(b); err != nil {
 		return err
 	}
 
@@ -80,26 +97,17 @@ func (c *ClientConn) SetEncodings(encs Encodings) error {
 		encs = append(encs, &RawEncoding{})
 	}
 
-	buf := NewBuffer(nil)
-
-	// Prepare message.
-	msg := SetEncodingsMessage{
-		Msg:     messages.SetEncodings,
-		NumEncs: uint16(len(encs)),
+	// Prepare message using encoding package.
+	wmsg := encoding.SetEncodingsRequestWire{
+		MsgType:   byte(messages.SetEncodings),
+		NumEnc:    uint16(len(encs)),
+		Encodings: encsToEncodingTypes(encs),
 	}
-	if err := buf.Write(msg); err != nil {
-		return err
-	}
-	bytes, err := encs.Marshal()
+	wireData, err := encoding.MarshalToWire(&wmsg)
 	if err != nil {
 		return err
 	}
-	if err := buf.Write(bytes); err != nil {
-		return err
-	}
-
-	// Send message.
-	if err := c.send(buf.Bytes()); err != nil {
+	if err := c.send(wireData); err != nil {
 		return err
 	}
 
@@ -120,8 +128,19 @@ type FramebufferUpdateRequestMessage struct {
 //
 // See RFC 6143 Section 7.5.3
 func (c *ClientConn) FramebufferUpdateRequest(inc rfbflags.RFBFlag, x, y, w, h uint16) error {
-	msg := FramebufferUpdateRequestMessage{messages.FramebufferUpdateRequest, inc, x, y, w, h}
-	return c.send(&msg)
+	wmsg := encoding.FramebufferUpdateRequestWire{
+		MsgType:     byte(messages.FramebufferUpdateRequest),
+		Incremental: uint8(inc),
+		X:           x,
+		Y:           y,
+		Width:       w,
+		Height:      h,
+	}
+	b, err := encoding.MarshalToWire(&wmsg)
+	if err != nil {
+		return err
+	}
+	return c.send(b)
 }
 
 // KeyEventMessage holds the wire format message.
@@ -148,8 +167,16 @@ func (c *ClientConn) KeyEvent(key keys.Key, down bool) error {
 		logging.Infof("ClientConnt.%s", logging.FnNameWithArgs("%s, %t", key, down))
 	}
 
-	msg := KeyEventMessage{messages.KeyEvent, rfbflags.BoolToRFBFlag(down), [2]byte{}, key}
-	if err := c.send(msg); err != nil {
+	wmsg := encoding.KeyEventWire{
+		MsgType:  byte(messages.KeyEvent),
+		DownFlag: uint8(rfbflags.BoolToRFBFlag(down)),
+		Key:      int32(key),
+	}
+	b, err := encoding.MarshalToWire(&wmsg)
+	if err != nil {
+		return err
+	}
+	if err := c.send(b); err != nil {
 		return err
 	}
 
@@ -176,8 +203,17 @@ func (c *ClientConn) PointerEvent(button buttons.Button, x, y uint16) error {
 		logging.Infof("%s", logging.FnNameWithArgs("%s, %d, %d", button, x, y))
 	}
 
-	msg := PointerEventMessage{messages.PointerEvent, uint8(button), x, y}
-	if err := c.send(msg); err != nil {
+	wmsg := encoding.PointerEventWire{
+		MsgType:    byte(messages.PointerEvent),
+		ButtonMask: uint8(button),
+		X:          x,
+		Y:          y,
+	}
+	b, err := encoding.MarshalToWire(&wmsg)
+	if err != nil {
+		return err
+	}
+	if err := c.send(b); err != nil {
 		return err
 	}
 
@@ -214,17 +250,26 @@ func (c *ClientConn) ClientCutText(text string) error {
 	// alone. No carriage-return (0x0d) is used."
 	text = strings.Join(strings.Split(text, "\r"), "")
 
-	msg := ClientCutTextMessage{
-		Msg:    messages.ClientCutText,
-		Length: uint32(len(text)),
+	wmsg := encoding.ClientCutTextWire{
+		MsgType: byte(messages.ClientCutText),
+		Text:    text,
 	}
-	if err := c.send(msg); err != nil {
+	b, err := encoding.MarshalToWire(&wmsg)
+	if err != nil {
 		return err
 	}
-	if err := c.send([]byte(text)); err != nil {
+	if err := c.send(b); err != nil {
 		return err
 	}
 
 	settleUI()
 	return nil
+}
+
+func encsToEncodingTypes(encs Encodings) []encodings.Encoding {
+	types := make([]encodings.Encoding, 0, len(encs))
+	for _, e := range encs {
+		types = append(types, e.Type())
+	}
+	return types
 }

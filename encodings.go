@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/kward/go-vnc/encodings"
+	"github.com/kward/go-vnc/encoding"
 )
 
 //=============================================================================
@@ -76,7 +77,8 @@ func (e *RawEncoding) Marshal() ([]byte, error) {
 		}
 	}
 
-	return buf.Bytes(), nil
+	raw := &encoding.RawEncodingWire{Bytes: buf.Bytes()}
+	return raw.WireMarshal()
 }
 
 // Read implements the Encoding interface.

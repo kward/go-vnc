@@ -8,11 +8,22 @@ This library implements [RFC 6143][RFC6143] -- The Remote Framebuffer Protocol
 * CI:             [![CI][CIStatus]][CIProject]
 * Documentation:  [![GoDoc][GoDocStatus]][GoDoc]
 
+## Dependencies (build time)
+
+### Debian
+
+Install the required system packages:
+
+    $ sudo apt install golang protobuf-compiler
+
+Go modules are managed via `go get` (see Setup below).
+
 ## Setup (Go modules)
 1. Add to your module and run tests.
 
     ```
     $ go get github.com/kward/go-vnc@latest
+    $ cd github.com/kward/go-vnc
     $ go test ./...
     ```
 

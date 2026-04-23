@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"image"
 
+	"github.com/kward/go-vnc/encoding"
 	"github.com/kward/go-vnc/encodings"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"
@@ -101,27 +102,24 @@ func (m *FramebufferUpdate) Marshal() ([]byte, error) {
 		logging.Infof("FramebufferUpdate.%s", logging.FnName())
 	}
 
-	buf := NewBuffer(nil)
-	msg := struct {
-		msg      messages.ServerMessage // message-type
-		_        [1]byte                // padding
-		numRects uint16                 // number-of-rectangles
-	}{
-		msg:      messages.FramebufferUpdate,
-		numRects: m.NumRect,
-	}
-	if err := buf.Write(msg); err != nil {
-		return nil, err
-	}
-	for _, rect := range m.Rects {
-		bytes, err := rect.Marshal()
-		if err != nil {
-			return nil, err
+	rects := make([]encoding.RectDataWire, len(m.Rects))
+	for i, rect := range m.Rects {
+		rects[i] = encoding.RectDataWire{
+			X: rect.X, Y: rect.Y,
+			Width: rect.Width, Height: rect.Height,
+			Encoding: rect.Enc.Type(),
 		}
-		buf.Write(bytes)
+		if buf, err := rect.Enc.Marshal(); err == nil {
+			rects[i].Payload = buf
+		}
 	}
 
-	return buf.Bytes(), nil
+	wmsg := encoding.FramebufferUpdateWire{
+		MsgType:  byte(messages.FramebufferUpdate),
+		NumRects: m.NumRect,
+		RectData: rects,
+	}
+	return wmsg.WireMarshal()
 }
 
 // Unmarshal implements the Unmarshaler interface.
@@ -205,24 +203,15 @@ func (r *Rectangle) Marshal() ([]byte, error) {
 		logging.Infof("Rectangle.%s", logging.FnName())
 	}
 
-	buf := NewBuffer(nil)
-
-	var msg rectangleMessage
-	msg.X, msg.Y, msg.W, msg.H = r.X, r.Y, r.Width, r.Height
-	msg.E = r.Enc.Type()
-	if err := buf.Write(msg); err != nil {
-		return nil, err
+	wrect := encoding.RectDataWire{
+		X: r.X, Y: r.Y,
+		Width: r.Width, Height: r.Height,
+		Encoding: r.Enc.Type(),
 	}
-
-	bytes, err := r.Enc.Marshal()
-	if err != nil {
-		return nil, err
+	if encBytes, err := r.Enc.Marshal(); err == nil {
+		wrect.Payload = encBytes
 	}
-	if err := buf.Write(bytes); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	return wrect.WireMarshal()
 }
 
 // Unmarshal implements the Unmarshaler interface.
