@@ -17,7 +17,6 @@ with something more appropriate for your setup.
 
     "github.com/kward/go-vnc"
     "github.com/kward/go-vnc/messages"
-    "github.com/kward/go-vnc/rfbflags"
   )
 
   func main() {
@@ -38,7 +37,7 @@ with something more appropriate for your setup.
     go func() {
       w, h := vc.FramebufferWidth(), vc.FramebufferHeight()
       for {
-        if err := vc.FramebufferUpdateRequest(rfbflags.RFBTrue, 0, 0, w, h); err != nil {
+        if err := vc.FramebufferUpdateRequest(true, 0, 0, w, h); err != nil {
           log.Printf("error requesting framebuffer update: %v", err)
         }
         time.Sleep(1 * time.Second)

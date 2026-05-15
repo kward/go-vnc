@@ -13,7 +13,6 @@ import (
 	"github.com/kward/go-vnc/keys"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"
-	"github.com/kward/go-vnc/rfbflags"
 )
 
 // SetPixelFormatMessage holds the wire format message.
@@ -35,8 +34,8 @@ func (c *ClientConn) SetPixelFormat(pf PixelFormat) error {
 	pfWire := encoding.PixelFormatWire{
 		BPP:        pf.BPP,
 		Depth:      pf.Depth,
-		BigEndian:  uint8(pf.BigEndian),
-		TrueColor:  uint8(pf.TrueColor),
+		BigEndian:  boolToUint8(pf.BigEndian),
+		TrueColor:  boolToUint8(pf.TrueColor),
 		RedMax:     pf.RedMax,
 		GreenMax:   pf.GreenMax,
 		BlueMax:    pf.BlueMax,
@@ -48,16 +47,16 @@ func (c *ClientConn) SetPixelFormat(pf PixelFormat) error {
 		MsgType: byte(messages.SetPixelFormat),
 		PF:      pfWire,
 	}
-	b, err := encoding.MarshalToWire(&wmsg)
+	encBytes, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
-	if err := c.send(b); err != nil {
+	if err := c.send(encBytes); err != nil {
 		return err
 	}
 
 	// Invalidate the color map.
-	if !rfbflags.IsTrueColor(pf.TrueColor) {
+	if !pf.TrueColor {
 		c.colorMap = [256]Color{}
 	}
 
@@ -103,11 +102,11 @@ func (c *ClientConn) SetEncodings(encs Encodings) error {
 		NumEnc:    uint16(len(encs)),
 		Encodings: encsToEncodingTypes(encs),
 	}
-	wireData, err := encoding.MarshalToWire(&wmsg)
+	encBytes, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
-	if err := c.send(wireData); err != nil {
+	if err := c.send(encBytes); err != nil {
 		return err
 	}
 
@@ -118,7 +117,7 @@ func (c *ClientConn) SetEncodings(encs Encodings) error {
 // FramebufferUpdateRequestMessage holds the wire format message.
 type FramebufferUpdateRequestMessage struct {
 	Msg           messages.ClientMessage // message-type
-	Inc           rfbflags.RFBFlag       // incremental
+	Inc           bool                   // incremental
 	X, Y          uint16                 // x-, y-position
 	Width, Height uint16                 // width, height
 }
@@ -127,16 +126,16 @@ type FramebufferUpdateRequestMessage struct {
 // time between the request and the actual framebuffer update being received.
 //
 // See RFC 6143 Section 7.5.3
-func (c *ClientConn) FramebufferUpdateRequest(inc rfbflags.RFBFlag, x, y, w, h uint16) error {
+func (c *ClientConn) FramebufferUpdateRequest(inc bool, x, y, w, h uint16) error {
 	wmsg := encoding.FramebufferUpdateRequestWire{
 		MsgType:     byte(messages.FramebufferUpdateRequest),
-		Incremental: uint8(inc),
+		Incremental: boolToUint8(inc),
 		X:           x,
 		Y:           y,
 		Width:       w,
 		Height:      h,
 	}
-	b, err := encoding.MarshalToWire(&wmsg)
+	b, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
@@ -146,7 +145,7 @@ func (c *ClientConn) FramebufferUpdateRequest(inc rfbflags.RFBFlag, x, y, w, h u
 // KeyEventMessage holds the wire format message.
 type KeyEventMessage struct {
 	Msg      messages.ClientMessage // message-type
-	DownFlag rfbflags.RFBFlag       // down-flag
+	DownFlag bool                   // down-flag
 	_        [2]byte                // padding
 	Key      keys.Key               // key
 }
@@ -169,14 +168,14 @@ func (c *ClientConn) KeyEvent(key keys.Key, down bool) error {
 
 	wmsg := encoding.KeyEventWire{
 		MsgType:  byte(messages.KeyEvent),
-		DownFlag: uint8(rfbflags.BoolToRFBFlag(down)),
+		DownFlag: boolToUint8(down),
 		Key:      int32(key),
 	}
-	b, err := encoding.MarshalToWire(&wmsg)
+	encPayload, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
-	if err := c.send(b); err != nil {
+	if err := c.send(encPayload); err != nil {
 		return err
 	}
 
@@ -209,11 +208,11 @@ func (c *ClientConn) PointerEvent(button buttons.Button, x, y uint16) error {
 		X:          x,
 		Y:          y,
 	}
-	b, err := encoding.MarshalToWire(&wmsg)
+	encPayload, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
-	if err := c.send(b); err != nil {
+	if err := c.send(encPayload); err != nil {
 		return err
 	}
 
@@ -254,11 +253,11 @@ func (c *ClientConn) ClientCutText(text string) error {
 		MsgType: byte(messages.ClientCutText),
 		Text:    text,
 	}
-	b, err := encoding.MarshalToWire(&wmsg)
+	data, err := wmsg.WireMarshal()
 	if err != nil {
 		return err
 	}
-	if err := c.send(b); err != nil {
+	if err := c.send(data); err != nil {
 		return err
 	}
 

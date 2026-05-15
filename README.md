@@ -100,14 +100,13 @@ Request framebuffer updates (poll or event-driven):
 import (
     "time"
     "github.com/kward/go-vnc"
-    "github.com/kward/go-vnc/rfbflags"
 )
 
 // Periodically request incremental updates for the full desktop.
 go func() {
     w, h := vc.FramebufferWidth(), vc.FramebufferHeight()
     for {
-        _ = vc.FramebufferUpdateRequest(rfbflags.RFBTrue, 0, 0, w, h)
+        _ = vc.FramebufferUpdateRequest(true, 0, 0, w, h)
         time.Sleep(100 * time.Millisecond)
     }
 }()

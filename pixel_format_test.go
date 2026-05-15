@@ -6,13 +6,6 @@ import (
 	"testing"
 
 	"github.com/kward/go-vnc/go/operators"
-	"github.com/kward/go-vnc/rfbflags"
-)
-
-const (
-	// Shadow the RFBFlag constants.
-	RFBFalse = rfbflags.RFBFalse
-	RFBTrue  = rfbflags.RFBTrue
 )
 
 func TestPixelFormat_Marshal(t *testing.T) {
@@ -24,9 +17,9 @@ func TestPixelFormat_Marshal(t *testing.T) {
 		//
 		// Valid PixelFormats.
 		//
-		{PixelFormat{BPP: 8, Depth: 8, BigEndian: RFBTrue, TrueColor: RFBFalse},
+		{PixelFormat{BPP: 8, Depth: 8, BigEndian: true, TrueColor: false},
 			[]uint8{8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, true},
-		{PixelFormat{BPP: 8, Depth: 16, BigEndian: RFBTrue, TrueColor: RFBFalse},
+		{PixelFormat{BPP: 8, Depth: 16, BigEndian: true, TrueColor: false},
 			[]uint8{8, 16, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, true},
 		{NewPixelFormat(16),
 			[]uint8{16, 16, 1, 1, 255, 255, 255, 255, 255, 255, 0, 4, 8, 0, 0, 0}, true},
@@ -34,13 +27,13 @@ func TestPixelFormat_Marshal(t *testing.T) {
 		// Invalid PixelFormats.
 		//
 		// BPP invalid
-		{PixelFormat{BPP: 1, Depth: 1, BigEndian: RFBTrue, TrueColor: RFBFalse},
+		{PixelFormat{BPP: 1, Depth: 1, BigEndian: true, TrueColor: false},
 			[]uint8{}, false},
 		// Depth invalid
-		{PixelFormat{BPP: 8, Depth: 1, BigEndian: RFBTrue, TrueColor: RFBFalse},
+		{PixelFormat{BPP: 8, Depth: 1, BigEndian: true, TrueColor: false},
 			[]uint8{}, false},
 		// BPP > Depth
-		{PixelFormat{BPP: 16, Depth: 8, BigEndian: RFBTrue, TrueColor: RFBFalse},
+		{PixelFormat{BPP: 16, Depth: 8, BigEndian: true, TrueColor: false},
 			[]uint8{}, false},
 	}
 
@@ -74,19 +67,19 @@ func TestPixelFormat_Unmarshal(t *testing.T) {
 		// Valid PixelFormats.
 		//
 		{[]uint8{8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			PixelFormat{BPP: 8, Depth: 8, BigEndian: RFBTrue, TrueColor: RFBFalse},
+			PixelFormat{BPP: 8, Depth: 8, BigEndian: true, TrueColor: false},
 			true},
 		{[]uint8{8, 16, 1, 1, 255, 255, 255, 255, 255, 255, 0, 4, 8, 0, 0, 0},
 			PixelFormat{
 				BPP: 8, Depth: 16,
-				BigEndian: RFBTrue, TrueColor: RFBTrue,
+				BigEndian: true, TrueColor: true,
 				RedMax: 65535, GreenMax: 65535, BlueMax: 65535,
 				RedShift: 0, GreenShift: 4, BlueShift: 8},
 			true},
 		{[]uint8{16, 16, 1, 1, 255, 255, 255, 255, 255, 255, 0, 4, 8, 0, 0, 0},
 			NewPixelFormat(16), true},
 		{[]uint8{32, 32, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			PixelFormat{BPP: 32, Depth: 32, BigEndian: RFBTrue, TrueColor: RFBFalse},
+			PixelFormat{BPP: 32, Depth: 32, BigEndian: true, TrueColor: false},
 			true},
 		//
 		// Invalid PixelFormats.
@@ -123,8 +116,8 @@ func TestPixelFormat_String(t *testing.T) {
 		str  string
 	}{
 		{"8bpp-8depth",
-			PixelFormat{BPP: 8, Depth: 8, BigEndian: RFBTrue, TrueColor: RFBFalse},
-			"{ bpp: 8 depth: 8 big-endian: RFBTrue true-color: RFBFalse red-max: 0 green-max: 0 blue-max: 0 red-shift: 0 green-shift: 0 blue-shift: 0 }"},
+			PixelFormat{BPP: 8, Depth: 8, BigEndian: true, TrueColor: false},
+			"{ bpp: 8 depth: 8 big-endian: true true-color: false red-max: 0 green-max: 0 blue-max: 0 red-shift: 0 green-shift: 0 blue-shift: 0 }"},
 	} {
 		if got, want := tt.pf.String(), tt.str; got != want {
 			t.Errorf("%s: string() = %q, want = %q", tt.desc, got, want)

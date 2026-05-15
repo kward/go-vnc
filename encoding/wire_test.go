@@ -21,7 +21,7 @@ func TestPixelFormatWire_marshal_unmarshal(t *testing.T) {
 		BlueShift:  0,
 		Padding:    [3]byte{},
 	}
-	data, err := original.marshalFields()
+	data, err := original.WireMarshal()
 	if err != nil {
 		t.Fatal(err)
 	}

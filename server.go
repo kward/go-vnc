@@ -12,7 +12,6 @@ import (
 	"github.com/kward/go-vnc/encodings"
 	"github.com/kward/go-vnc/logging"
 	"github.com/kward/go-vnc/messages"
-	"github.com/kward/go-vnc/rfbflags"
 )
 
 // ServerMessage is the interface satisfied by server messages.
@@ -273,34 +272,28 @@ func (*SetColorMapEntries) Read(c *ClientConn) (ServerMessage, error) {
 		logging.Infof("SetColorMapEntries.%s", logging.FnName())
 	}
 
-	// Read off the padding
-	var padding [1]byte
-	if err := c.receive(&padding); err != nil {
+	wireMsg, err := encoding.ReadSetColorMapEntriesWire(c.c)
+	if err != nil {
 		return nil, err
 	}
 
-	var result SetColorMapEntries
-	if err := c.receive(&result.FirstColor); err != nil {
-		return nil, err
+	result := &SetColorMapEntries{
+		FirstColor: wireMsg.FirstColor,
+		Colors:     make([]Color, wireMsg.NumColors),
 	}
 
-	var numColors uint16
-	if err := c.receive(&numColors); err != nil {
-		return nil, err
-	}
-
-	result.Colors = make([]Color, numColors)
-	for i := uint16(0); i < numColors; i++ {
-		color := &result.Colors[i]
-		if err := c.receive(&color); err != nil {
-			return nil, err
+	for i := uint16(0); i < wireMsg.NumColors; i++ {
+		result.Colors[i] = Color{
+			pf: &c.pixelFormat,
+			cm: &c.colorMap,
+			R:    wireMsg.Colors[i].Red,
+			G:    wireMsg.Colors[i].Green,
+			B:    wireMsg.Colors[i].Blue,
 		}
-
-		// Update the connection's color map
-		c.colorMap[result.FirstColor+i] = *color
+		c.colorMap[wireMsg.FirstColor+i] = result.Colors[i]
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 // Color represents a single color in a color map.
@@ -333,7 +326,7 @@ func (c *Color) Marshal() ([]byte, error) {
 
 	order := c.pf.order()
 	pixel := c.cmIndex
-	if rfbflags.IsTrueColor(c.pf.TrueColor) {
+	if c.pf.TrueColor {
 		pixel = uint32(c.R) << c.pf.RedShift
 		pixel |= uint32(c.G) << c.pf.GreenShift
 		pixel |= uint32(c.B) << c.pf.BlueShift
@@ -377,7 +370,7 @@ func (c *Color) Unmarshal(data []byte) error {
 		pixel = order.Uint32(data)
 	}
 
-	if rfbflags.IsTrueColor(c.pf.TrueColor) {
+	if c.pf.TrueColor {
 		c.R = uint16((pixel >> c.pf.RedShift) & uint32(c.pf.RedMax))
 		c.G = uint16((pixel >> c.pf.GreenShift) & uint32(c.pf.GreenMax))
 		c.B = uint16((pixel >> c.pf.BlueShift) & uint32(c.pf.BlueMax))
@@ -454,21 +447,10 @@ func (*ServerCutText) Read(c *ClientConn) (ServerMessage, error) {
 		logging.Infof("ServerCutText.%s", logging.FnName())
 	}
 
-	// Read off the padding
-	var padding [1]byte
-	if err := c.receive(&padding); err != nil {
+	wireMsg, err := encoding.ReadServerCutTextWire(c.c)
+	if err != nil {
 		return nil, err
 	}
 
-	var textLength uint32
-	if err := c.receive(&textLength); err != nil {
-		return nil, err
-	}
-
-	textBytes := make([]uint8, textLength)
-	if err := c.receive(&textBytes); err != nil {
-		return nil, err
-	}
-
-	return &ServerCutText{string(textBytes)}, nil
+	return &ServerCutText{Text: wireMsg.Text}, nil
 }

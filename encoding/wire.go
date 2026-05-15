@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 
 	"github.com/kward/go-vnc/encodings"
 )
@@ -80,7 +81,7 @@ type PixelFormatWire struct {
 	Padding    [3]byte
 }
 
-func (w *PixelFormatWire) marshalFields() ([]byte, error) {
+func (w *PixelFormatWire) WireMarshal() ([]byte, error) {
 	buf := &bytes.Buffer{}
 	buf.WriteByte(w.BPP)
 	buf.WriteByte(w.Depth)
@@ -94,10 +95,6 @@ func (w *PixelFormatWire) marshalFields() ([]byte, error) {
 	buf.WriteByte(w.BlueShift)
 	buf.Write(w.Padding[:])
 	return buf.Bytes(), nil
-}
-
-func (w *PixelFormatWire) WireMarshal() ([]byte, error) {
-	return w.marshalFields()
 }
 
 func (w *PixelFormatWire) WireUnmarshal(data []byte) error {
@@ -127,14 +124,14 @@ type SetPixelFormatRequestWire struct {
 }
 
 func (w *SetPixelFormatRequestWire) WireMarshal() ([]byte, error) {
-	b, err := w.PF.marshalFields()
+	pfBytes, err := w.PF.WireMarshal()
 	if err != nil {
 		return nil, err
 	}
 	buf := &bytes.Buffer{}
 	buf.WriteByte(w.MsgType)
 	buf.Write([]byte{0, 0, 0}) // padding
-	buf.Write(b)
+	buf.Write(pfBytes)
 	return buf.Bytes(), nil
 }
 
@@ -561,4 +558,50 @@ func (w *CopyRectWire) WireUnmarshal(data []byte) error {
 	w.DestX = binary.BigEndian.Uint16(data[4:6])
 	w.DestY = binary.BigEndian.Uint16(data[6:8])
 	return nil
+}
+
+// ---- Read helpers for decoding server messages from net.Conn ----
+
+// ReadServerCutTextWire reads a server CutText message from net.Conn.
+func ReadServerCutTextWire(r io.Reader) (*ServerCutTextWire, error) {
+	w := &ServerCutTextWire{}
+	header := make([]byte, 6)
+	if _, err := io.ReadFull(r, header); err != nil {
+		return nil, err
+	}
+	w.MsgType = header[0]
+	w.Length = binary.BigEndian.Uint32(header[2:6])
+	text := make([]byte, w.Length)
+	if _, err := io.ReadFull(r, text); err != nil {
+		return nil, err
+	}
+	w.Text = string(text)
+	return w, nil
+}
+
+// ReadSetColorMapEntriesWire reads a SetColorMapEntries message from net.Conn.
+// It reads the header (msg_type, pad, first_color, num_colors) then num_colors
+// color entries (each: pad(1), red(2), green(2), blue(2)).
+func ReadSetColorMapEntriesWire(r io.Reader) (*SetColorMapEntriesWire, error) {
+	w := &SetColorMapEntriesWire{}
+	header := make([]byte, 6)
+	if _, err := io.ReadFull(r, header); err != nil {
+		return nil, err
+	}
+	w.MsgType = header[0]
+	w.FirstColor = binary.BigEndian.Uint16(header[2:4])
+	w.NumColors = binary.BigEndian.Uint16(header[4:6])
+	w.Colors = make([]ColorEntryWire, w.NumColors)
+	for i := uint16(0); i < w.NumColors; i++ {
+		colorData := make([]byte, 7)
+		if _, err := io.ReadFull(r, colorData); err != nil {
+			return nil, err
+		}
+		w.Colors[i] = ColorEntryWire{
+			Red:   binary.BigEndian.Uint16(colorData[1:3]),
+			Green: binary.BigEndian.Uint16(colorData[3:5]),
+			Blue:  binary.BigEndian.Uint16(colorData[5:7]),
+		}
+	}
+	return w, nil
 }

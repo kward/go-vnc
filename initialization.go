@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/kward/go-vnc/logging"
-	"github.com/kward/go-vnc/rfbflags"
 )
 
 // clientInit implements §7.3.1 ClientInit.
@@ -15,9 +14,9 @@ func (c *ClientConn) clientInit() error {
 		logging.Infof("%s", logging.FnName())
 	}
 
-	sharedFlag := rfbflags.BoolToRFBFlag(!c.config.Exclusive)
+	sharedFlag := !c.config.Exclusive
 	if logging.V(logging.ResultLevel) {
-		logging.Infof("sharedFlag: %d", sharedFlag)
+		logging.Infof("sharedFlag: %t", sharedFlag)
 	}
 	if err := c.send(sharedFlag); err != nil {
 		return err

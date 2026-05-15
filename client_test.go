@@ -1,8 +1,8 @@
 package vnc
 
 import (
+	"context"
 	"fmt"
-	"math"
 	"net"
 	"reflect"
 	"testing"
@@ -13,8 +13,6 @@ import (
 	"github.com/kward/go-vnc/go/operators"
 	"github.com/kward/go-vnc/keys"
 	"github.com/kward/go-vnc/messages"
-	"github.com/kward/go-vnc/rfbflags"
-	"context"
 )
 
 func TestSetPixelFormat(t *testing.T) {
@@ -34,11 +32,11 @@ func TestSetPixelFormat(t *testing.T) {
 				PF: PixelFormat{
 					BPP:        16,
 					Depth:      16,
-					BigEndian:  rfbflags.RFBTrue,
-					TrueColor:  rfbflags.RFBTrue,
-					RedMax:     uint16(math.Exp2(16)) - 1,
-					GreenMax:   uint16(math.Exp2(16)) - 1,
-					BlueMax:    uint16(math.Exp2(16)) - 1,
+					BigEndian:  true,
+					TrueColor:  true,
+					RedMax:     65535,
+					GreenMax:   65535,
+					BlueMax:    65535,
 					RedShift:   0,
 					GreenShift: 4,
 					BlueShift:  8,
@@ -133,11 +131,11 @@ func TestSetEncodings(t *testing.T) {
 
 func TestFramebufferUpdateRequest(t *testing.T) {
 	tests := []struct {
-		inc        rfbflags.RFBFlag
+		inc        bool
 		x, y, w, h uint16
 	}{
-		{rfbflags.RFBFalse, 10, 20, 30, 40},
-		{rfbflags.RFBTrue, 11, 21, 31, 41},
+		{false, 10, 20, 30, 40},
+		{true, 11, 21, 31, 41},
 	}
 
 	mockConn := &MockConn{}
@@ -237,7 +235,7 @@ func TestKeyEvent(t *testing.T) {
 		if got, want := req.Msg, messages.KeyEvent; got != want {
 			t.Errorf("incorrect message-type; got = %v, want = %v", got, want)
 		}
-		down := rfbflags.ToBool(req.DownFlag)
+		down := req.DownFlag
 		if got, want := down, tt.down; got != want {
 			t.Errorf("incorrect down-flag; got = %v, want = %v", got, want)
 		}
